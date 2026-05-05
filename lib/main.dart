@@ -1,12 +1,16 @@
 import 'dart:io';
 
-import 'package:bloc_project/bloc/pic%20bloc/image_picker_bloc.dart';
-import 'package:bloc_project/bloc/pic%20bloc/image_picker_event.dart';
-import 'package:bloc_project/bloc/pic%20bloc/image_picker_states.dart';
-import 'package:bloc_project/bloc/switch_bloc.dart';
-import 'package:bloc_project/utils/image_util.dart';
+import '/bloc/pic%20bloc/image_picker_bloc.dart';
+import '/bloc/pic%20bloc/image_picker_event.dart';
+import '/bloc/pic%20bloc/image_picker_states.dart';
+import '/bloc/switch_bloc.dart';
+import '/bloc/theme%20bloc/theme_events.dart';
+import '/bloc/theme%20bloc/theme_states.dart';
+import '/utils/image_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'bloc/theme bloc/theme_bloc.dart';
 
 void main() => runApp(MyApp());
 
@@ -18,8 +22,19 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => SwitchBloc()),
         BlocProvider(create: (_) => ImagePickerBloc(ImageUtil.instance)),
+        BlocProvider(create: (_) => ThemeBloc()),
       ],
-      child: MaterialApp(home: StartupApp()),
+      child: BlocBuilder<ThemeBloc, ThemeStates>(
+        builder: (context, state) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            themeMode: state.themeMode,
+            theme: ThemeData.light(),
+            darkTheme: ThemeData.dark(),
+            home: StartupApp(),
+          );
+        },
+      ),
     );
   }
 }
@@ -36,12 +51,14 @@ developDialog(BuildContext context) {
             children: [
               ElevatedButton(
                 onPressed: () {
+                  Navigator.pop(context);
                   context.read<ImagePickerBloc>().add(PickImageFromGallery());
                 },
                 child: Text('Gallery'),
               ),
               ElevatedButton(
                 onPressed: () {
+                  Navigator.pop(context);
                   context.read<ImagePickerBloc>().add(PickImageFromCamera());
                 },
                 child: Text('Camera'),
@@ -60,7 +77,35 @@ class StartupApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Flutter Bloc')),
+      appBar: AppBar(
+        actions: [
+          Row(
+            mainAxisAlignment: .spaceAround,
+            spacing: 10,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  context.read<ThemeBloc>().add(SystemThemeEvent());
+                },
+                child: Icon(Icons.system_security_update),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<ThemeBloc>().add(DarkThemeEvent());
+                },
+                child: Icon(Icons.dark_mode),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<ThemeBloc>().add(LightThemeEvent());
+                },
+                child: Icon(Icons.light_mode),
+              ),
+            ],
+          ),
+        ],
+        title: Text('Flutter Bloc'),
+      ),
       body: Column(
         mainAxisAlignment: .center,
         crossAxisAlignment: .center,
