@@ -1,162 +1,160 @@
-import 'package:bloc_project/bloc/bloc/todo_bloc.dart';
-import 'package:bloc_project/bloc/theme_bloc.dart'
-    show DarkEvent, DarkState, LightEvent, LightState, ThemeBloc, ThemeState;
+import 'dart:io';
+
+import 'package:bloc_project/bloc/pic%20bloc/image_picker_bloc.dart';
+import 'package:bloc_project/bloc/pic%20bloc/image_picker_event.dart';
+import 'package:bloc_project/bloc/pic%20bloc/image_picker_states.dart';
+import 'package:bloc_project/bloc/switch_bloc.dart';
+import 'package:bloc_project/utils/image_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-void main() {
-  runApp(MyApp());
-}
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => ThemeBloc()),
-        BlocProvider(create: (_) => TodoBloc()),
+        BlocProvider(create: (_) => SwitchBloc()),
+        BlocProvider(create: (_) => ImagePickerBloc(ImageUtil.instance)),
       ],
-
-      child: BlocBuilder<ThemeBloc, ThemeState>(
-        builder: (context, state) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: state is DarkState ? ThemeData.dark() : ThemeData.light(),
-            home: ThemeClass(),
-          );
-        },
-      ),
+      child: MaterialApp(home: StartupApp()),
     );
   }
 }
 
-class ThemeClass extends StatelessWidget {
-  const ThemeClass({super.key});
+developDialog(BuildContext context) {
+  return showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text('Pick Image from?'),
+        content: SizedBox(
+          height: 100,
+          child: Column(
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  context.read<ImagePickerBloc>().add(PickImageFromGallery());
+                },
+                child: Text('Gallery'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<ImagePickerBloc>().add(PickImageFromCamera());
+                },
+                child: Text('Camera'),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class StartupApp extends StatelessWidget {
+  const StartupApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final currentState = context.watch<ThemeBloc>().state;
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          final controller = TextEditingController();
-          showDialog(
-            context: context,
-            builder: (_) => AlertDialog(
-              title: Text('Add Todo'),
-              content: TextField(
-                controller: controller,
-                decoration: InputDecoration(hintText: 'Enter todo...'),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    if (controller.text.isNotEmpty) {
-                      context.read<TodoBloc>().add(
-                        AddTodoEvent(todo: controller.text),
-                      );
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: Text('Add'),
-                ),
-              ],
-            ),
-          );
-        },
-        child: Icon(Icons.add),
-      ),
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            onPressed: () {
-              if (currentState is LightState) {
-                context.read<ThemeBloc>().add(DarkEvent());
-              }
-              if (currentState is DarkState) {
-                context.read<ThemeBloc>().add(LightEvent());
-              }
-            },
-            icon: Icon(
-              currentState is LightState ? Icons.dark_mode : Icons.light_mode,
+      appBar: AppBar(title: Text('Flutter Bloc')),
+      body: Column(
+        mainAxisAlignment: .center,
+        crossAxisAlignment: .center,
+        children: [
+          // Padding(
+          //   padding: .all(8.0),
+          //   child: Row(
+          //     // spacing: 10,
+          //     mainAxisAlignment: .spaceBetween,
+          //     children: [
+          //       Text('Notifications', style: TextStyle(fontSize: 25)),
+          //       BlocBuilder<SwitchBloc, SwitchState>(
+          //         builder: (context, state) {
+          //           return Switch(
+          //             value: state.isON,
+          //             onChanged: (value) {
+          //               print(value);
+          //               context.read<SwitchBloc>().add(SwitchEventON());
+          //             },
+          //           );
+          //         },
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          // SizedBox(height: 12),
+          // BlocBuilder<SwitchBloc, SwitchState>(
+          //   builder: (context, state) {
+          //     return Container(
+          //       height: 150,
+          //       width: double.infinity,
+          //       decoration: BoxDecoration(
+          //         color: Colors.red.withValues(alpha: state.sliderValue),
+          //       ),
+          //     );
+          //   },
+          // ),
+          // SizedBox(height: 12),
+
+          // BlocBuilder<SwitchBloc, SwitchState>(
+          //   builder: (context, state) {
+          //     return Slider(
+          //       value: state.sliderValue,
+          //       onChanged: (value) {
+          //         context.read<SwitchBloc>().add(
+          //           SliderEvent(slideValue: value),
+          //         );
+          //       },
+          //     );
+          //   },
+          // ),
+          // BlocBuilder<ImagePickerBloc, ImagePickerStates>(
+          //   builder: (context, state) {
+          //     return;
+          //   },
+          // ),
+          // BlocBuilder<ImagePickerBloc, ImagePickerStates>(
+          //   builder: (context, state) {
+          //     return SizedBox(
+          //       height: 100,
+          //       child:
+          //     );
+          //   },
+          // ),
+          Center(
+            child: ElevatedButton(
+              onPressed: () => developDialog(context),
+              child: Text('Pick Image'),
             ),
           ),
-        ],
-        title: Text('Todo app'),
-      ),
-      body: BlocBuilder<TodoBloc, TodoState>(
-        builder: (context, state) {
-          if (state is TodoInitial) {
-            return ListView.builder(
-              itemCount: state.todos.length,
-              itemBuilder: (context, index) {
-                final todo = state.todos[index];
-                return ListTile(
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.edit),
-                        onPressed: () {
-                          final controller = TextEditingController(text: todo);
-                          showDialog(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              title: Text('Update Todo'),
-                              content: TextField(
-                                controller: controller,
-                                decoration: InputDecoration(
-                                  hintText: 'Update todo...',
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    if (controller.text.isNotEmpty) {
-                                      context.read<TodoBloc>().add(
-                                        UpdateTodoEvent(
-                                          index: index,
-                                          newTodo: controller.text,
-                                        ),
-                                      );
-                                      Navigator.pop(context);
-                                    }
-                                  },
-                                  child: Text('Update'),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                      // Delete Button
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {
-                          context.read<TodoBloc>().add(
-                            RemoveTodoEvent(index: index),
-                          );
-                        },
-                      ),
-                    ],
+          SizedBox(height: 10),
+          BlocBuilder<ImagePickerBloc, ImagePickerStates>(
+            builder: (context, state) {
+              if (state.pickedFile != null) {
+                return Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  leading: Text(todo),
+                  child: Image.file(File(state.pickedFile!.path.toString())),
                 );
-              },
-            );
-          }
-          return Center(child: Text('No Todo here'));
-        },
+              } else if (state.pickedFile == null) {
+                return GestureDetector(
+                  onTap: () {
+                    context.read<ImagePickerBloc>().add(PickImageFromCamera());
+                  },
+                  child: const Icon(Icons.camera),
+                );
+              }
+              // Fixed: Added a return for when neither condition is met
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
       ),
     );
   }
